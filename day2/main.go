@@ -13,8 +13,11 @@ import (
 type Game struct {
 	Id       int
 	MaxRed   int
+	MinRed   int
 	MaxGreen int
+	MinGreen int
 	MaxBlue  int
+	MinBlue  int
 	Rounds   []Round
 }
 
@@ -38,6 +41,14 @@ func (g *Game) isPossible(red int, green int, blue int) bool {
 		g.MaxBlue <= blue
 }
 
+func (g *Game) findMinimum() {
+	for _, round := range g.Rounds {
+		g.MinRed = max(g.MinRed, round.Red)
+		g.MinGreen = max(g.MinGreen, round.Green)
+		g.MinBlue = max(g.MinBlue, round.Blue)
+	}
+}
+
 func main() {
 	fmt.Println("Day two!")
 	games, err := readGames()
@@ -45,13 +56,17 @@ func main() {
 		log.Fatalln("could not read games: ", err)
 	}
 	idSum := 0
+	minPowerSum := 0
 	for _, game := range games {
 		game.findMaximum()
+		game.findMinimum()
 		if game.isPossible(12, 13, 14) {
 			idSum += game.Id
 		}
+		minPowerSum += game.MinRed * game.MinGreen * game.MinBlue
 	}
 	fmt.Printf("Sum of id equals: %d\n", idSum)
+	fmt.Printf("Sum of min power equals: %d\n", minPowerSum)
 }
 
 func readGames() ([]Game, error) {
