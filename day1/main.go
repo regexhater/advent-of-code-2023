@@ -32,26 +32,69 @@ func main() {
 
 func findCalibrationValue(line string) (int, error) {
 	var firstLeftDigit, firstRightDigit rune
+	sb := strings.Builder{}
 	for _, ch := range line {
-		if ch >= '0' && ch <= '9' {
-			firstLeftDigit = ch
+		dig := checkForDigit(ch, sb.String(), true)
+		if dig != nil {
+			firstLeftDigit = *dig
+			sb.Reset()
 			break
 		}
+		sb.WriteRune(ch)
 	}
 	for i := len(line) - 1; i >= 0; i-- {
 		ch := rune(line[i])
-		if ch >= '0' && ch <= '9' {
-			firstRightDigit = ch
+		dig := checkForDigit(ch, sb.String(), false)
+		if dig != nil {
+			firstRightDigit = *dig
+			sb.Reset()
 			break
 		}
+		temp := sb.String()
+		sb.Reset()
+		sb.WriteRune(ch)
+		sb.WriteString(temp)
 	}
-	sb := strings.Builder{}
 	sb.WriteRune(firstLeftDigit)
 	sb.WriteRune(firstRightDigit)
-	return strconv.Atoi(sb.String())
+	s := sb.String()
+	return strconv.Atoi(s)
 }
 
-// Read input
-// Find first digit from left
-// Find first digit from right
-// create number and add to sum
+func checkForDigit(ch rune, lineSoFar string, isFromLeft bool) *rune {
+	if ch >= '0' && ch <= '9' {
+		return &ch
+	}
+	sb := strings.Builder{}
+	if isFromLeft {
+		sb.WriteString(lineSoFar)
+		sb.WriteRune(ch)
+	} else {
+		sb.WriteRune(ch)
+		sb.WriteString(lineSoFar)
+	}
+	var dig rune
+	potentialSpelledDigit := sb.String()
+	if strings.Contains(potentialSpelledDigit, "one") {
+		dig = '1'
+	} else if strings.Contains(potentialSpelledDigit, "two") {
+		dig = '2'
+	} else if strings.Contains(potentialSpelledDigit, "three") {
+		dig = '3'
+	} else if strings.Contains(potentialSpelledDigit, "four") {
+		dig = '4'
+	} else if strings.Contains(potentialSpelledDigit, "five") {
+		dig = '5'
+	} else if strings.Contains(potentialSpelledDigit, "six") {
+		dig = '6'
+	} else if strings.Contains(potentialSpelledDigit, "seven") {
+		dig = '7'
+	} else if strings.Contains(potentialSpelledDigit, "eight") {
+		dig = '8'
+	} else if strings.Contains(potentialSpelledDigit, "nine") {
+		dig = '9'
+	} else {
+		return nil
+	}
+	return &dig
+}
