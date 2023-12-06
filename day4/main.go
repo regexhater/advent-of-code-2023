@@ -10,10 +10,13 @@ import (
 	"strings"
 )
 
+const maxCardID = 193
+
 type Card struct {
 	Number         int
 	WinningNumbers []int
 	GameNumbers    []int
+	NumberOfHits   int
 	Worth          int
 }
 
@@ -24,6 +27,7 @@ func (c *Card) CalculateWorth() {
 			wCounter++
 		}
 	}
+	c.NumberOfHits = wCounter
 	if wCounter > 0 {
 		c.Worth = 1
 		for i := wCounter - 1; i > 0; i-- {
@@ -39,14 +43,31 @@ func main() {
 		log.Fatalln("could not read input: ", err)
 	}
 	points := 0
+	totalCardsWon := 0
+	cardsToIds := make(map[int]Card)
 	for _, card := range cards {
 		card.CalculateWorth()
 		points += card.Worth
+		cardsToIds[card.Number] = *card
 	}
 	fmt.Printf("The total worth of cards is: %d\n", points)
+	q := make([]Card, 0)
+	for _, card := range cards {
+		q = append(q, *card)
+	}
+	for len(q) > 0 {
+		card := q[0]
+		wonCopies := getWonCopies(card, cardsToIds)
+		for _, wonCopy := range wonCopies {
+			q = append(q, wonCopy)
+		}
+		q = q[1:]
+		totalCardsWon++
+	}
+	fmt.Printf("Won %d cards in total\n", totalCardsWon)
 }
 
-func readInput() ([]Card, error) {
+func readInput() ([]*Card, error) {
 	file, err := os.Open("input.txt")
 	if err != nil {
 		return nil, err
@@ -55,7 +76,7 @@ func readInput() ([]Card, error) {
 	fs := bufio.NewScanner(file)
 	fs.Split(bufio.ScanLines)
 	counter := 1
-	result := make([]Card, 0)
+	result := make([]*Card, 0)
 	for fs.Scan() {
 		line := fs.Text()
 		lineWithoutHeader := strings.Split(line, ": ")
@@ -82,7 +103,7 @@ func readInput() ([]Card, error) {
 			return nil, err
 		}
 		result = append(
-			result, Card{
+			result, &Card{
 				Number:         counter,
 				WinningNumbers: winningNumbers,
 				GameNumbers:    gameNumbers,
@@ -104,4 +125,16 @@ func convertNumbers(numbersAsStrings []string) ([]int, error) {
 		result = append(result, number)
 	}
 	return result, nil
+}
+
+func getWonCopies(card Card, cardsToIds map[int]Card) []Card {
+	copiesWon := make([]Card, 0)
+	for i := 1; i <= card.NumberOfHits; i++ {
+		wonCardIndex := card.Number + i
+		if wonCardIndex > maxCardID {
+			break
+		}
+		copiesWon = append(copiesWon, cardsToIds[wonCardIndex])
+	}
+	return copiesWon
 }
