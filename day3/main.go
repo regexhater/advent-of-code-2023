@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+type Coords struct {
+	X int
+	Y int
+}
+
 func main() {
 	fmt.Println("Day 3!")
 	schematics, err := readSchematics()
@@ -16,6 +21,7 @@ func main() {
 		log.Fatalln("could not read schematics: ", err)
 	}
 	sumOfPartNumbers := 0
+	gearsCoordsToAdjacentNumbers := make(map[Coords]*[]int)
 	for i := 0; i < len(schematics); i++ {
 		foundNumber := false
 		numberStart := 0
@@ -32,6 +38,15 @@ func main() {
 					if isAdjacentToSymbol(schematics, i, numberStart, numberEnd) {
 						num := convertToNumber(schematics, i, numberStart, numberEnd)
 						sumOfPartNumbers += num
+						cords := getCoordsIfAdjacentToGear(schematics, i, numberStart, numberEnd)
+						if cords != nil {
+							adjacentNums, ok := gearsCoordsToAdjacentNumbers[*cords]
+							if !ok {
+								gearsCoordsToAdjacentNumbers[*cords] = &[]int{num}
+							} else {
+								*adjacentNums = append(*adjacentNums, num)
+							}
+						}
 					}
 				}
 			} else {
@@ -40,6 +55,15 @@ func main() {
 					if isAdjacentToSymbol(schematics, i, numberStart, numberEnd) {
 						num := convertToNumber(schematics, i, numberStart, numberEnd)
 						sumOfPartNumbers += num
+						cords := getCoordsIfAdjacentToGear(schematics, i, numberStart, numberEnd)
+						if cords != nil {
+							adjacentNums, ok := gearsCoordsToAdjacentNumbers[*cords]
+							if !ok {
+								gearsCoordsToAdjacentNumbers[*cords] = &[]int{num}
+							} else {
+								*adjacentNums = append(*adjacentNums, num)
+							}
+						}
 					}
 				}
 				foundNumber = false
@@ -47,6 +71,13 @@ func main() {
 		}
 	}
 	fmt.Printf("The sum of all part numbers is: %d\n", sumOfPartNumbers)
+	sumOfGears := 0
+	for _, nums := range gearsCoordsToAdjacentNumbers {
+		if len(*nums) == 2 {
+			sumOfGears += (*nums)[0] * (*nums)[1]
+		}
+	}
+	fmt.Printf("The sum of all gear ratios if %d\n", sumOfGears)
 }
 
 func readSchematics() ([]string, error) {
@@ -78,6 +109,53 @@ func isAdjacentToSymbol(schematics []string, x int, startY int, endY int) bool {
 		}
 	}
 	return false
+}
+
+func getCoordsIfAdjacentToGear(schematics []string, x int, startY int, endY int) *Coords {
+	for i := startY; i <= endY; i++ {
+		if i-1 >= 0 && schematics[x][i-1] == '*' {
+			return &Coords{
+				X: x,
+				Y: i - 1,
+			}
+		} else if i-1 >= 0 && x-1 >= 0 && schematics[x-1][i-1] == '*' {
+			return &Coords{
+				X: x - 1,
+				Y: i - 1,
+			}
+		} else if x-1 >= 0 && schematics[x-1][i] == '*' {
+			return &Coords{
+				X: x - 1,
+				Y: i,
+			}
+		} else if x-1 >= 0 && i+1 < len(schematics[x]) && schematics[x-1][i+1] == '*' {
+			return &Coords{
+				X: x - 1,
+				Y: i + 1,
+			}
+		} else if i+1 < len(schematics[x]) && schematics[x][i+1] == '*' {
+			return &Coords{
+				X: x,
+				Y: i + 1,
+			}
+		} else if x+1 < len(schematics) && i+1 < len(schematics[x]) && schematics[x+1][i+1] == '*' {
+			return &Coords{
+				X: x + 1,
+				Y: i + 1,
+			}
+		} else if x+1 < len(schematics) && schematics[x+1][i] == '*' {
+			return &Coords{
+				X: x + 1,
+				Y: i,
+			}
+		} else if x+1 < len(schematics) && i-1 >= 0 && schematics[x+1][i-1] == '*' {
+			return &Coords{
+				X: x + 1,
+				Y: i - 1,
+			}
+		}
+	}
+	return nil
 }
 
 func isSymbol(ch uint8) bool {
