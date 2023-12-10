@@ -15,7 +15,7 @@ public class Main {
         // We calculate min steps for each start separately then find The Least Common Multiple
         // also known as the Least Common Denominator. If we take a look at scores when trying to calculate
         // all at the same time we can notice that there is a cycle for each of them meaning that if one of them
-        // reaches the end in time t1 it will reach it again in time t2 = 2t1 and so on.
+        // reaches the end in s1 steps it will reach it again in s2 steps where s2 = 2s1 and so on.
         // This leads us to just find a place when those cycles sync up thus the LCM method.
         var minStepsForMultipleStarts = input
                 .mapping()
