@@ -8,21 +8,25 @@ public class Main {
         System.out.println("day 8!");
         var input = readInput();
         var node = "AAA";
-        var i = 0;
-        var counter = 0;
-        while (!node.equals("ZZZ")) {
-            if (input.directions().charAt(i) == 'L') {
-                node = input.mapping().get(node)[0];
-            } else {
-                node = input.mapping().get(node)[1];
-            }
-            i++;
-            counter++;
-            if (i >= input.directions().length()) {
-                i = 0;
-            }
-        }
-        System.out.printf("There needs to be %d steps to the end\n", counter);
+        var stepsNeeded = getSteps(input, node, "ZZZ");
+        System.out.printf("There needs to be %d steps to the end\n", stepsNeeded);
+
+        // Part 2
+        // We calculate min steps for each start separately then find The Least Common Multiple
+        // also known as the Least Common Denominator. If we take a look at scores when trying to calculate
+        // all at the same time we can notice that there is a cycle for each of them meaning that if one of them
+        // reaches the end in time t1 it will reach it again in time t2 = 2t1 and so on.
+        // This leads us to just find a place when those cycles sync up thus the LCM method.
+        var minStepsForMultipleStarts = input
+                .mapping()
+                .keySet()
+                .stream()
+                .filter(x -> x.endsWith("A"))
+                .map(x -> getSteps(input, x, "Z"))
+                .reduce(Main::lcm)
+                .orElse(-1L);
+
+        System.out.printf("There needs to be %d simulations steps to the end\n", minStepsForMultipleStarts);
     }
 
 
@@ -54,4 +58,38 @@ public class Main {
 
         return new Input(directions, mapping);
     }
+
+    public static long getSteps(Input input, String current, String endsWith) {
+        long steps = 0;
+        int i = 0;
+        while (!current.endsWith(endsWith)) {
+            if (input.directions().charAt(i) == 'L') {
+                current = input.mapping().get(current)[0];
+            } else {
+                current = input.mapping().get(current)[1];
+            }
+            i++;
+            steps++;
+            if (i >= input.directions().length()) {
+                i = 0;
+            }
+        }
+
+        return steps;
+    }
+
+    public static long lcm(long a, long b) {
+        var ma = a;
+        var mb = b;
+        long remainder;
+
+        while (mb != 0L) {
+            remainder = ma % mb;
+            ma = mb;
+            mb = remainder;
+        }
+
+        return a * b / ma;
+    }
 }
+
