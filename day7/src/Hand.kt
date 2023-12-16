@@ -1,4 +1,8 @@
-class Hand(letters: CharArray, val bid: Int) :Comparable<Hand> {
+class Hand(
+    letters: CharArray,
+    val bid: Int,
+    private val enableJokers : Boolean = false
+) :Comparable<Hand> {
     private lateinit var type: HandType
     private var cards: List<Card>
 
@@ -9,7 +13,9 @@ class Hand(letters: CharArray, val bid: Int) :Comparable<Hand> {
                 'A' -> cards.add(Card.A)
                 'K' -> cards.add(Card.K)
                 'Q' -> cards.add(Card.Q)
-                'J' -> cards.add(Card.J)
+                'J' ->  {
+                    if (enableJokers) cards.add(Card.JOKER) else cards.add(Card.J)
+                }
                 'T' -> cards.add(Card.T)
                 '9' -> cards.add(Card.NINE)
                 '8' -> cards.add(Card.EIGHTH)
@@ -36,20 +42,55 @@ class Hand(letters: CharArray, val bid: Int) :Comparable<Hand> {
             1 -> type = HandType.FiveOfAKind
             2 -> {
                 type = if (cardsMap.values.contains(4)) {
-                    HandType.FourOfAKind
+                    if (cardsMap.containsKey(Card.JOKER)) {
+                        HandType.FiveOfAKind
+                    } else {
+                        HandType.FourOfAKind
+                    }
                 } else {
-                    HandType.FullHouse
+                    if (cardsMap.containsKey(Card.JOKER)) {
+                        HandType.FiveOfAKind
+                    } else {
+                        HandType.FullHouse
+                    }
                 }
             }
             3 -> {
-                type = if (cardsMap.values.contains(3)) {
-                    HandType.ThreeOfAKind
+                if (cardsMap.values.contains(3)) {
+                    if (cardsMap.containsKey(Card.JOKER)) {
+                        when(cardsMap.getOrDefault(Card.JOKER, 0)) {
+                            1 -> type = HandType.FourOfAKind
+                            2 -> type = HandType.FiveOfAKind
+                            3 -> type = HandType.FourOfAKind
+                        }
+                    } else {
+                        type = HandType.ThreeOfAKind
+                    }
                 } else {
-                    HandType.TwoPair
+                    if (cardsMap.containsKey(Card.JOKER)) {
+                        when(cardsMap.getOrDefault(Card.JOKER, 0)) {
+                            1 -> type = HandType.FullHouse
+                            2 -> type = HandType.FourOfAKind
+                        }
+                    } else {
+                        type = HandType.TwoPair
+                    }
                 }
             }
-            4 -> type = HandType.OnePair
-            5 -> type = HandType.HighCard
+            4 -> {
+                type = if (cardsMap.containsKey(Card.JOKER)) {
+                    HandType.ThreeOfAKind
+                } else {
+                    HandType.OnePair
+                }
+            }
+            5 -> {
+                type = if (cardsMap.containsKey(Card.JOKER)) {
+                    HandType.OnePair
+                } else {
+                    HandType.HighCard
+                }
+            }
         }
     }
 

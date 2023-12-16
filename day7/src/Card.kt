@@ -12,4 +12,5 @@ enum class Card(val value : Int) {
     FOUR(3),
     THREE(2),
     TWO(1),
+    JOKER(0)
 }
